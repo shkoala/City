@@ -1,0 +1,36 @@
+(function(root){
+'use strict';
+const W=root.CityWorld,S=root.CityScene,asset=p=>root.CITY_ASSETS?.[p]||p;
+function car(color,type,id){
+ const palette={coral:['#f79a83','#b64248'],blue:['#91c3ef','#366daa'],gold:['#ffe19a','#bd883c'],mint:['#a1dac6','#388b79']},[paint,shade]=palette[color],van=type==='van';
+ return `<defs><linearGradient id="paint-${id}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${paint}"/><stop offset="1" stop-color="${shade}"/></linearGradient><linearGradient id="glass-${id}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d7f8ff"/><stop offset="1" stop-color="#426b8d"/></linearGradient></defs><g transform="translate(-24 -8.8) scale(.48 .4)"><ellipse cx="51" cy="24" rx="49" ry="20" fill="#243746" opacity=".2"/><rect x="18" y="0" width="15" height="8" rx="3" fill="#233445"/><rect x="18" y="36" width="15" height="8" rx="3" fill="#233445"/><rect x="69" y="0" width="15" height="8" rx="3" fill="#233445"/><rect x="69" y="36" width="15" height="8" rx="3" fill="#233445"/><path d="M12 5Q8 5 6 12V32Q8 39 16 39H80Q96 38 98 29V15Q96 5 82 5Z" fill="url(#paint-${id})" stroke="${shade}" stroke-width="1.8"/><path d="M15 7H80Q89 8 92 12" fill="none" stroke="#fff" opacity=".65" stroke-width="2"/><path d="M26 10L${van?'35':'39'} 7H65L77 12V32L65 37H${van?'35':'39'}L26 33Z" fill="${shade}"/><path d="M31 12L40 9H62L69 13V31L62 35H40L31 31Z" fill="url(#glass-${id})"/><path d="M43 10H60V34H43Z" fill="${paint}"/><path d="M44 11H58" stroke="#fff" opacity=".5"/><path d="M72 14L78 12V32L72 30Z" fill="#dcf6ff"/><path d="M27 13V31L32 30V14Z" fill="#91bbd0"/><path d="M81 12H89M81 32H89M17 11H22M17 33H22" stroke="${shade}" stroke-width="1.4"/><rect x="92" y="10" width="5" height="7" rx="2" fill="#fff5be"/><rect x="92" y="27" width="5" height="7" rx="2" fill="#fff5be"/><rect class="brake-light" x="6" y="10" width="4" height="7" rx="1" fill="#b12f39"/><rect class="brake-light" x="6" y="27" width="4" height="7" rx="1" fill="#b12f39"/><path d="M96 18V26M9 18V26" stroke="#d5e3e8" stroke-width="2"/></g>`;
+}
+function setup(){
+ document.getElementById('townArt').innerHTML=S.mapMarkup(asset);
+ document.getElementById('spots').innerHTML=W.places.map(p=>`<button type="button" class="place-spot" data-place="${p.id}" aria-label="${p.name}" style="left:${p.rect[0]/W.W*100}%;top:${p.rect[1]/W.H*100}%;width:${p.rect[2]/W.W*100}%;height:${p.rect[3]/W.H*100}%"><span>${p.name}</span></button>`).join('');
+ document.getElementById('trafficLayer').innerHTML=root.cityTraffic.cars.map(c=>`<svg class="car-frame" id="car-frame-${c.id}" viewBox="0 0 1448 1086"><g class="vehicle" id="car-${c.id}" data-road="${c.road}">${car(c.color,c.type,c.id)}</g></svg>`).join('');
+ document.getElementById('cycleLayer').innerHTML=root.cityCycling.riders.map(r=>`<svg class="cyclist-frame" id="cyclist-frame-${r.id}" viewBox="0 0 1448 1086"><g id="cyclist-${r.id}" class="cyclist" data-direction="${r.dir}">${S.cyclistMarkup(r.color,r.dir)}</g></svg>`).join('');
+ document.getElementById('occlusionLayer').innerHTML=S.foregrounds.map(f=>`<svg class="foreground" viewBox="0 0 1448 1086" style="z-index:${S.depth(f.foot)}"><defs><clipPath id="foreground-${f.id}"><polygon points="${S.points(f.points)}"/></clipPath></defs><image href="${asset(f.source)}" width="1448" height="1086" clip-path="url(#foreground-${f.id})"/></svg>`).join('')+`<svg class="person-frame" viewBox="0 0 1448 1086" style="z-index:${S.depth(S.inspector.y)}">${S.inspectorMarkup()}</svg>`;
+ document.getElementById('signalLayer').innerHTML=root.cityTraffic.signals.map(sig=>{
+  const baked=S.bakedSignals.find(s=>s.id===sig.id),foot=baked?.foot||sig.light.y,cx=baked?baked.x+baked.w/2:sig.light.x,w=baked?.w||17,h=baked?.h||33,y=baked?.y||foot-h-8,rx=w/2;
+  return `<svg class="signal-frame" id="signal-${sig.id}" viewBox="0 0 1448 1086" data-phase="clear" style="z-index:${S.depth(foot)}"><g aria-hidden="true">${baked?'':`<rect x="${cx-1.6}" y="${y+h-2}" width="3.2" height="${foot-y-h+2}" rx="1" fill="#36534b"/><ellipse cx="${cx}" cy="${foot}" rx="5" ry="2" fill="#36534b"/>`}<rect x="${cx-w/2}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="#25453d" stroke="#91a597" stroke-width="1"/><circle class="lamp red" cx="${cx}" cy="${y+h*.2}" r="${w*.19}"/><circle class="lamp amber" cx="${cx}" cy="${y+h*.5}" r="${w*.19}"/><circle class="lamp green" cx="${cx}" cy="${y+h*.8}" r="${w*.19}"/><g transform="translate(${cx+w*.6} ${y+h*.48})"><rect width="11" height="17" rx="3" fill="#25453d"/><g class="pedestrian-lamp" fill="none" stroke-width="1.7" stroke-linecap="round"><circle cx="5.5" cy="4" r="1.5"/><path d="M5.5 7V11M2.5 8.5L5.5 7 8.5 8.5M3 15L5.5 11 8 15"/></g></g></g></svg>`;
+ }).join('');
+ document.getElementById('pathOverlay').innerHTML=`<g class="path-lines">${W.edgeList.map(e=>`<path d="${e.points.map((p,i)=>(i?'L':'M')+p.x+' '+p.y).join(' ')}" class="${e.kind}"/>`).join('')}</g><g class="path-points">${Object.values(W.nodes).map(n=>`<circle cx="${n.x}" cy="${n.y}" r="4"/>`).join('')}</g><path id="previewPath"/><circle id="arrivalRing" r="21"/>`;
+}
+function update(traffic,walker){
+ for(const c of traffic.cars){const p=S.carPose(c),g=document.getElementById('car-'+c.id),frame=document.getElementById('car-frame-'+c.id);g.setAttribute('transform',`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.angle.toFixed(2)})`);g.classList.toggle('braking',c.speed<4);frame.style.zIndex=p.z;frame.style.opacity=p.opacity;}
+ for(const r of root.cityCycling.riders){
+  const g=document.getElementById('cyclist-'+r.id),frame=document.getElementById('cyclist-frame-'+r.id),phase=r.distance/3,leg=Math.sin(phase)*3;
+  g.setAttribute('transform',`translate(${r.x.toFixed(2)} ${r.y.toFixed(2)}) rotate(${(-Math.atan2(r.tx*r.dir,r.ty*r.dir)*180/Math.PI).toFixed(2)}) scale(${r.scale.toFixed(3)})`);frame.style.zIndex=S.depth(r.y+20*r.scale);
+  g.querySelector('.rider-leg-near').setAttribute('d',`M4-13 8 ${-4+leg/2} 3 ${4+leg}`);
+  g.querySelector('.rider-leg-far').setAttribute('d',`M-4-13-7 ${-4-leg/2}-3 ${4-leg}`);
+  g.querySelector('.rider-shoe-near').setAttribute('transform',`translate(0 ${leg})`);
+  g.querySelector('.rider-shoe-far').setAttribute('transform',`translate(0 ${-leg})`);
+  for(const wheel of g.querySelectorAll('.wheel-spokes'))wheel.setAttribute('transform',`rotate(${(phase*180/Math.PI*r.dir)%360})`);
+ }
+ for(const s of traffic.signals)document.getElementById('signal-'+s.id).dataset.phase=s.phase;
+ const cole=document.getElementById('cole');cole.style.zIndex=S.depth(walker.y);cole.dataset.facing=walker.facing;
+}
+root.CityDraw={setup,update,car};
+})(window);
+
