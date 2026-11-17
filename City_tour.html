@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-navigation-version="20261115-bus-stop-turn">
+<html lang="en" data-navigation-version="20261117-directions-audit">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -248,8 +248,9 @@ function shortestPath(start,end){
 const neighbour=(id,facing)=>edges[id]?.find(e=>direction(id,e.to)===facing)?.to;
 function pastPath(id,facing){const path=[id];let at=id,passed=false;for(let i=0;i<12;i++){const next=neighbour(at,facing);if(!next||path.includes(next))break;const e=edge(at,next);path.push(next);if(e.passes.length)return path;if(passed)return path;if(nodes[next].place)passed=true;else if(edges[next].length>2||!neighbour(next,facing))return null;at=next;}return null;}
 function pastLandmark(id,facing){const p=pastPath(id,facing);if(!p)return null;for(let i=1;i<p.length;i++){const e=edge(p[i-1],p[i]);if(e.passes.length)return e.passes[0];if(nodes[p[i]].place)return p[i];}return null;}
-const aliases={bakery:['bakery','baker','bakers','bakers shop'],cafe:['cafe','coffee shop'],police:['police','police station'],post:['post','post office'],greengrocer:['greengrocer','greengrocers','fruit and vegetable shop'],bus:['bus stop','bus station']};
-const normalise=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\b(the|a|an|im|at|we|are|its|is)\b/g,'').replace(/\s+/g,' ').trim();
+const aliases={bakery:['bakery','baker','bakers','bakers shop'],cafe:['cafe','coffee shop'],police:['police','police station'],post:['post','post office'],greengrocer:['greengrocer','greengrocers','greengrocers shop','fruit and vegetable shop'],bus:['bus stop']};
+// Accept a place name or a short reply, while keeping the complete place name.
+const normalise=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[’‘ʼ']/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim().replace(/^(?:(?:i am|im|we are|were) (?:at|outside)|(?:it is|its|this is)|at|outside)\s+/,'').replace(/^(?:the|a|an)\s+/,'').trim();
 const answerMatches=(s,id)=>!!venues[id]&&[venues[id].name,id,...(aliases[id]||[])].some(v=>normalise(v)===normalise(s));
 const missions=[
  {id:'errand-bread',sender:'Mum',role:'family in Australia',emoji:'👩',text:'We haven’t got any bread. Could you buy a loaf for dinner, please?',target:'bakery'},
@@ -279,17 +280,52 @@ function turns(from,to,index){let d=(dirs.indexOf(to)-dirs.indexOf(from)+4)%4;re
 function authored(start,facing,target,path,steps,story){return {start,facing,target,path,story,instructions:steps.map(([kind,text,from,to])=>({kind,text,from,to})),sender:'Alex',role:'a friend in Australia',emoji:'🧑',text:'Follow my directions. Where shall we meet?'};}
 const walks=[
  authored('bus','S','post',['bus','bR','bXR','bN','mCrossE','post'],[
- ['turn','Turn left.',0,0],['straight','Go straight on to the corner.',0,1],['turn','Turn left.',1,1],['straight','Go straight on to the zebra crossing.',1,3],['cross','Cross the road.',3,4],['turn','Turn left.',4,4],['straight','Go straight on to the first entrance. It’s on your right.',4,5]],'Family and friends'),
+ ['turn','Turn left.',0,0],['straight','Go straight on to the corner.',0,1],['turn','Turn left.',1,1],['straight','Go straight on past the zebra crossing on your right. Stop at the zebra crossing ahead.',1,3],['cross','Cross the road ahead.',3,4],['turn','Turn left.',4,4],['straight','Go straight on to the first entrance. It’s on your right.',4,5]],'Family and friends'),
  authored('post','W','garage',['post','police','garage'],[['past','Go straight on. Go past the police station. Stop at the next entrance. It’s on your right.',0,2]],'Family and friends'),
  authored('garage','W','theatre',['garage','mCrossW','mL','mBackL','theatre'],[['straight','Go straight on to the corner.',0,2],['turn','Turn right.',2,2],['past','Go past the garage.',2,3],['turn','Turn right into the courtyard.',3,3],['straight','Go straight on to the first entrance. It’s on your left.',3,4]],'Family and friends'),
  authored('theatre','E','cafe',['theatre','cinema','cafe'],[['past','Go straight on. Go past the cinema. Stop at the next entrance. It’s on your left.',0,2]],'Family and friends'),
- authored('cafe','E','bakery',['cafe','mBackR','rBackL','bakery'],[['straight','Go straight on to the zebra crossing.',0,1],['cross','Cross the road.',1,2],['straight','Go straight on to the first entrance. It’s on your left.',2,3]],'Family and friends'),
- authored('bakery','E','library',['bakery','rBackR','rR','rCross','library'],[['straight','Go straight on to the corner.',0,1],['turn','Turn right.',1,1],['straight','Go straight on to the far corner.',1,2],['turn','Turn right.',2,2],['straight','Go straight on to the first entrance. It’s on your right.',2,4]],'Visiting Emma'),
- authored('library','W','post',['library','rL','mR','mCrossE','post'],[['straight','Go straight on to the zebra crossing.',0,1],['cross','Cross the road.',1,2],['straight','Go straight on to the first entrance. It’s on your right.',2,4]],'Visiting Emma'),
+ authored('cafe','E','bakery',['cafe','mBackR','rBackL','bakery'],[['straight','Go straight on to the zebra crossing ahead.',0,1],['cross','Cross the road ahead.',1,2],['straight','Go straight on to the first entrance. It’s on your left.',2,3]],'Family and friends'),
+ authored('bakery','E','library',['bakery','rBackR','rR','rCross','library'],[['straight','Go straight on to the corner.',0,1],['turn','Turn right.',1,1],['straight','Go straight on to the far corner.',1,2],['turn','Turn right.',2,2],['straight','Go straight on past the zebra crossing on your left. Stop at the first entrance. It’s on your right.',2,4]],'Visiting Emma'),
+ authored('library','W','post',['library','rL','mR','mCrossE','post'],[['straight','Go straight on to the zebra crossing ahead.',0,1],['cross','Cross the road ahead.',1,2],['straight','Go straight on past the zebra crossing on your left. Stop at the first entrance. It’s on your right.',2,4]],'Visiting Emma'),
  authored('post','W','school',['post','police','garage','mCrossW','mL','mBackL','mTopL','hL','hospital','hR','pL','park','pR','sL','school'],[
- ['past','Go straight on. Go past the police station and the garage.',0,4],['turn','Turn right at the corner.',4,4],['straight','Go straight on to the zebra crossing.',4,6],['cross','Cross the road.',6,7],['turn','Turn right.',7,7],['past','Go past the hospital.',7,9],['cross','Cross the road at the next zebra crossing.',9,10],['past','Go past the park.',10,12],['cross','Cross the road at the next zebra crossing.',12,13],['straight','Go straight on to the first entrance. It’s on your left.',13,14]],'Visiting Emma')
+ ['past','Go straight on. Go past the police station and the garage.',0,4],['turn','Turn right at the corner.',4,4],['straight','Go straight on to the zebra crossing ahead.',4,6],['cross','Cross the road ahead.',6,7],['turn','Turn right.',7,7],['past','Go past the hospital.',7,9],['cross','Cross the road ahead at the next zebra crossing.',9,10],['past','Go past the park.',10,12],['cross','Cross the road ahead at the next zebra crossing.',12,13],['straight','Go straight on to the first entrance. It’s on your left.',13,14]],'Visiting Emma')
 ];
-function instructionsFor(path,facing){let dir=facing,instructions=[];for(let i=1;i<path.length;){const nd=direction(path[i-1],path[i]);instructions.push(...turns(dir,nd,i-1));dir=nd;let end=i;while(end+1<path.length&&direction(path[end],path[end+1])===dir&&!edge(path[end-1],path[end]).crossing&&!edge(path[end],path[end+1]).crossing)end++;const segment=path.slice(i-1,end+1),passed=segment.slice(1,-1).filter(id=>nodes[id].place),cross=segment.slice(1).some((id,k)=>edge(segment[k],id).crossing);let text=cross?'Cross the road at the zebra crossing.':passed.length?'Go past '+passed.map(id=>venues[id].article).join(' and ')+'.':'Go straight on.';if(end===path.length-1)text+=' Stop at the next entrance. It’s on your '+(dir==='E'?'left':'right')+'.';else if(!cross)text+=' Stop at the '+(nodes[path[end]].kind==='crossing'?'zebra crossing':nodes[path[end]].place?'next entrance':'corner')+'.';instructions.push({kind:cross?'cross':passed.length?'past':'straight',text,from:i-1,to:end});i=end+1;}return instructions;}
+const relativeSide=(facing,to)=>(dirs.indexOf(to)-dirs.indexOf(facing)+4)%4===1?'right':'left';
+function entranceSide(id,facing){
+ const p=venues[id],n=nodes[id],x=p.rect[0]+p.rect[2]/2-n.x,y=p.rect[1]+p.rect[3]/2-n.y;
+ const [dx,dy]={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]}[facing];
+ return dx*y-dy*x<0?'left':'right';
+}
+function instructionsFor(path,facing){
+ let dir=facing;const instructions=[];
+ for(let i=1;i<path.length;){
+  const nd=direction(path[i-1],path[i]);instructions.push(...turns(dir,nd,i-1));dir=nd;
+  let end=i;while(end+1<path.length&&direction(path[end],path[end+1])===dir&&!edge(path[end-1],path[end]).crossing&&!edge(path[end],path[end+1]).crossing)end++;
+  const from=i-1,cross=!!edge(path[from],path[i]).crossing,phrases=[];let passed=false;
+  if(cross)phrases.push('Cross the road at the zebra crossing.');
+  else{
+   for(let k=i;k<=end;k++){
+    const e=edge(path[k-1],path[k]);
+    for(const id of e.passes){phrases.push('Go past '+venues[id].article+'.');passed=true;}
+    if(k<end){
+     if(nodes[path[k]].place){phrases.push('Go past '+venues[path[k]].article+'.');passed=true;}
+     for(const branch of edges[path[k]])if(branch.crossing&&branch.to!==path[k-1]&&branch.to!==path[k+1])phrases.push('Continue straight on past the zebra crossing on your '+relativeSide(dir,direction(path[k],branch.to))+'.');
+    }
+   }
+   if(!phrases.length)phrases.push('Go straight on.');
+  }
+  if(end===path.length-1)phrases.push('Stop at the next entrance. It’s on your '+entranceSide(path[end],dir)+'.');
+  else if(!cross){
+   const next=path[end+1],nextDir=direction(path[end],next);
+   // A crossing can also be a junction: describe the next manoeuvre, not the node's label.
+   if(edge(path[end],next).crossing)phrases.push(nextDir===dir?'Stop at the zebra crossing ahead.':'Stop beside the zebra crossing on your '+relativeSide(dir,nextDir)+'.');
+   else if(neighbour(path[end],dir))phrases.push('Stop at the next path on your '+relativeSide(dir,nextDir)+'.');
+   else phrases.push('Stop at the corner.');
+  }
+  instructions.push({kind:cross?'cross':passed?'past':'straight',text:phrases.join(' '),from,to:end});i=end+1;
+ }
+ return instructions;
+}
 function routeTask(start,facing,serial=0){
  const planned=walks[serial];if(planned&&start===planned.start)return {...planned,expectedFacing:planned.facing,facing,instructions:[...turns(facing,planned.facing,0),...planned.instructions],serial,planned:true};
  let target,path,connector=false;if(planned){target=planned.start;path=shortestPath(start,target);connector=true;}else{let options=places.filter(p=>p.id!==start).map(p=>({target:p.id,path:shortestPath(start,p.id)}));const long=options.filter(o=>o.path.length>=4);if(long.length)options=long;const choice=options[(serial-walks.length)%options.length];target=choice.target;path=choice.path;}
@@ -838,7 +874,7 @@ root.CityDraw={setup,update,car};
   function updateClock(){const now=new Date();$('clock').textContent=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}updateClock();setInterval(updateClock,30000);
   applySettings();renderAll();requestAnimationFrame(tick);
   // Read-only diagnostics. The simulation itself is shared with the regression tests.
-  window.cityMessages={getState:()=>({version:'20261115-bus-stop-turn',mode:s.mode,ruleIndex:s.ruleIndex,ruleRevealed:s.ruleRevealed,location:walker.location,facing:walker.facing,busy:walker.busy,waiting:walker.waiting,x:walker.x,y:walker.y,score:score(),accepted:s.accepted,route:s.route&&{path:s.route.path,instructions:s.route.instructions,target:s.route.target},routeTrail:[...s.routeTrail],routeIndex:s.routeSerial,routeSolved:s.routeSolved,trafficMode:traffic.mode,signals:traffic.signals.map(x=>({id:x.id,phase:x.phase,occupied:x.occupants.size})),cars:traffic.cars.map(c=>({...c})),cyclists:cycling.riders.map(r=>({...r}))})};
+  window.cityMessages={getState:()=>({version:'20261117-directions-audit',mode:s.mode,ruleIndex:s.ruleIndex,ruleRevealed:s.ruleRevealed,location:walker.location,facing:walker.facing,busy:walker.busy,waiting:walker.waiting,x:walker.x,y:walker.y,score:score(),accepted:s.accepted,route:s.route&&{path:s.route.path,instructions:s.route.instructions,target:s.route.target},routeTrail:[...s.routeTrail],routeIndex:s.routeSerial,routeSolved:s.routeSolved,trafficMode:traffic.mode,signals:traffic.signals.map(x=>({id:x.id,phase:x.phase,occupied:x.occupants.size})),cars:traffic.cars.map(c=>({...c})),cyclists:cycling.riders.map(r=>({...r}))})};
 })();
 
 

@@ -11,7 +11,7 @@ Mr Cole is a teacher in Russia. He is visiting his family in Australia. Lena is 
 
 ## Controls
 
-The fixed start is in front of the bus shelter, facing **down ↓**, away from the shelter. Left and right always mean **Cole’s** left and right. Use ↑ to walk, ← / → to turn, ↓ to turn around. Turn first, then walk. Continue straight through intermediate pavement junctions when the message tells you to do so.
+The fixed start is in front of the bus shelter, facing **down ↓**, away from the shelter. Left and right always mean **Cole’s** left and right. Use ↑ to walk, ← / → to turn, ↓ to turn around. Turn first, then walk. Continue straight through intermediate pavement junctions when the message tells you to do so. A zebra crossing on Cole’s left or right can be passed without crossing the road. “The zebra crossing ahead” means the one directly in front of him. In task 1, pass the crossing towards the bank on the right and cross the road ahead towards the post office.
 
 The garage, police station and post office are joined. Walk around an end of the whole row to reach the courtyard behind them. Never try to pass between these three buildings.
 
@@ -32,7 +32,7 @@ Each task begins exactly where the previous one ended. The game checks the compl
 
 ### Task 1: bus stop → post office
 
-Start facing down ↓. Turn left. Go straight on to the corner. Turn left. Go straight on to the zebra crossing. Cross the road. Turn left. Go straight on to the first entrance. It’s on your right.
+Start facing down ↓. Turn left. Go straight on to the corner. Turn left. Go straight on past the zebra crossing on your right. Stop at the zebra crossing ahead. Cross the road ahead. Turn left. Go straight on to the first entrance. It’s on your right.
 
 ### Task 2: post office → garage
 
@@ -48,19 +48,19 @@ Start facing right →. Go straight on. Go past the cinema. Stop at the next ent
 
 ### Task 5: café → baker’s
 
-Start facing right →. Go straight on to the zebra crossing. Cross the road. Go straight on to the first entrance. It’s on your left.
+Start facing right →. Go straight on to the zebra crossing ahead. Cross the road ahead. Go straight on to the first entrance. It’s on your left.
 
 ### Task 6: baker’s → library
 
-Start facing right →. Go straight on to the corner. Turn right. Go straight on to the far corner. Turn right. Go straight on to the first entrance. It’s on your right.
+Start facing right →. Go straight on to the corner. Turn right. Go straight on to the far corner. Turn right. Go straight on past the zebra crossing on your left. Stop at the first entrance. It’s on your right.
 
 ### Task 7: library → post office
 
-Start facing left ←. Go straight on to the zebra crossing. Cross the road. Go straight on to the first entrance. It’s on your right.
+Start facing left ←. Go straight on to the zebra crossing ahead. Cross the road ahead. Go straight on past the zebra crossing on your left. Stop at the first entrance. It’s on your right.
 
 ### Task 8: post office → school
 
-Start facing left ←. Go straight on. Go past the police station and the garage. Turn right at the corner. Go straight on to the zebra crossing. Cross the road. Turn right. Go past the hospital. Cross the road at the next zebra crossing. Go past the park. Cross the road at the next zebra crossing. Go straight on to the first entrance. It’s on your left.
+Start facing left ←. Go straight on. Go past the police station and the garage. Turn right at the corner. Go straight on to the zebra crossing ahead. Cross the road ahead. Turn right. Go past the hospital. Cross the road ahead at the next zebra crossing. Go past the park. Cross the road ahead at the next zebra crossing. Go straight on to the first entrance. It’s on your left.
 
 After task 8, Alex offers additional routes. Changing modes or reloading from another location can create a connecting task before the next story task.
 
@@ -90,6 +90,8 @@ After task 8, Alex offers additional routes. Changing modes or reloading from an
 | Sam — next to the police station, red postbox | post office |
 | Max — between the hospital and the school | park |
 | Dad — opposite the library, cash machine | bank |
+
+In Follow directions, accepted answers include the place name alone or a short reply: **post office**, **the post office**, **I’m at the post office**, **I am at the post office**. Accents, capital letters and apostrophes do not affect the result. **Baker’s / bakery / baker’s shop** and **greengrocer’s / greengrocer’s shop** are accepted. The picture shows a **bus stop**, not a bus station. A correct name is checked separately from Cole’s position, the route and his final facing. If the place is correct but the walk differs, the feedback explains what is still needed.
 
 Teacher studio can reveal names and pavement routes, pause traffic, return Cole to the bus stop, start a fresh lesson and import/export your own messages. Download offline game saves one self-contained HTML file. Read-aloud depends on the voices available on the device.
 
