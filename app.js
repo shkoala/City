@@ -21,7 +21,12 @@
   const score=()=>s.completed.size+s.routesCompleted;
   const isActive=()=>s.mode==='free'||(s.chat&&s.accepted&&(s.mode!=='directions'||!s.routeSolved));
   const isPaused=()=>s.paused||document.hidden||$('studio').open||$('welcome').open;
-  const messages={missions:['01 / MISSIONS','A message. A little mystery.<br>Find the place and help a friend.'],directions:['02 / FOLLOW DIRECTIONS','Read. Follow. Discover.<br>Where is your friend waiting?'],free:['03 / FREE WALK','Your town. Your own pace.<br>Turn a little walk into a conversation.'],rules:['04 / ROAD RULES','Look at a sign. Say a rule.<br>Use can, can’t, must or mustn’t.']};
+  const modeCaptions = {
+    missions: 'Find the place and help a friend.',
+    directions: 'Where is your friend waiting?',
+    free: 'Turn a little walk into a conversation.',
+    rules: 'Use can, can’t, must or mustn’t.',
+  };
 
   function onWalker(type,value){
     if(type==='turn'){turnUntil=performance.now()+320;$('cole').classList.remove('turning');void $('cole').offsetWidth;$('cole').classList.add('turning');setTimeout(()=>$('cole').classList.remove('turning'),340);renderLocation();renderControls();}
@@ -48,25 +53,36 @@
   }
   function renderModes(){
     document.querySelectorAll('[data-mode]').forEach(b=>{const yes=b.dataset.mode===s.mode;b.classList.toggle('active',yes);b.setAttribute('aria-pressed',String(yes));b.disabled=walker.busy;});
-    $('score').innerHTML='★ <b>'+score()+'</b>';$('modeNumber').textContent=messages[s.mode][0];$('modeDescription').innerHTML=messages[s.mode][1];
+    $('score').innerHTML='★ <b>'+score()+'</b>';
+    $('modeDescription').textContent = modeCaptions[s.mode];
     document.body.classList.toggle('free-click',s.mode==='free'&&s.freeControl==='click');
-    $('walkHint').hidden=!(s.mode==='free'&&s.freeControl==='click');
     document.body.classList.toggle('road-rules-mode',s.mode==='rules');$('roadSigns').hidden=s.mode!=='rules';if(s.mode==='rules')renderRoadSigns();
     $('map').setAttribute('aria-label','Town map. '+(s.mode==='rules'?'Select a road sign and say a rule.':isActive()?'Arrow keys turn and walk Mr Cole.':'Open a phone message to begin.'));
   }
   function renderControls(){
     const launch=$('controlLauncher'),active=isActive(),click=s.mode==='free'&&s.freeControl==='click';
     if(!active||click){s.controls=false;launch.innerHTML=s.mode==='rules'?'<span class="chat-helper">Tap a road sign ↗</span>':click?'<span class="chat-helper">Click to walk is on</span>':'<span class="chat-helper">Your adventure starts on the phone ↗</span>';}
-    else launch.innerHTML=`<button class="btn launch" data-action="controls" aria-expanded="${s.controls}" aria-controls="controls">${s.controls?'Hide':'Walk controls'} <small>↑ ← →</small><span>${s.controls?'⌄':'⌃'}</span></button>`;
+    else launch.innerHTML=`<button class="btn launch" data-action="controls" aria-label="${s.controls?'Hide walking controls':'Walk controls'}" aria-expanded="${s.controls}" aria-controls="controls">${s.controls?'Hide':'Walk controls'} <small aria-hidden="true">↑ ← →</small><span aria-hidden="true">${s.controls?'▴':'▾'}</span></button>`;
     const el=$('controls');el.hidden=!s.controls||!active||click;
     const next=W.neighbour(walker.location,walker.facing),past=W.pastPath(walker.location,walker.facing),passedPlace=W.pastLandmark(walker.location,walker.facing),cross=next&&W.edge(walker.location,next).crossing;
     const disabled=walker.busy||isPaused();
-    el.innerHTML=`<div class="control-title"><span>${s.mode==='directions'?'FOLLOW THE MESSAGE':'LEFT & RIGHT ARE MR COLE’S'}</span><button data-action="hideControls" aria-label="Hide walking controls">×</button></div><div class="control-row"><button class="steer" data-action="left" ${disabled?'disabled':''} title="Turn left (←)"><span>↶</span>Turn left</button><button class="steer forward" data-action="forward" ${disabled||!next?'disabled':''} title="Go straight on (↑)"><span>↑</span>${cross?'Cross the road':'Go straight on'}</button><button class="steer" data-action="right" ${disabled?'disabled':''} title="Turn right (→)"><span>↷</span>Turn right</button><button class="more-toggle" data-action="more" aria-expanded="${s.more}">${s.more?'Less −':'More +'}</button></div>${s.more?`<div class="more-controls"><button class="steer" data-action="around" ${disabled?'disabled':''}><span>⤾</span>Turn around</button>${past?`<button class="steer past-action" data-action="past" ${disabled?'disabled':''}>⇥ Go past ${safe(W.venues[passedPlace].article)}</button>`:'<span class="chat-helper" style="max-width:145px;align-self:center">Go past appears when a place is ahead of Cole.</span>'}</div>`:''}`;
+    const forward = cross ? 'Cross the road' : 'Go straight on';
+    el.innerHTML = `
+      <div class="control-row">
+        <button class="steer" data-action="left" ${disabled?'disabled':''} title="Turn left (←)"><span aria-hidden="true">↶</span>Turn left</button>
+        <button class="steer forward" data-action="forward" ${disabled||!next?'disabled':''} title="${forward} (↑)"><span aria-hidden="true">↑</span>${forward}</button>
+        <button class="steer" data-action="right" ${disabled?'disabled':''} title="Turn right (→)"><span aria-hidden="true">↷</span>Turn right</button>
+        <button class="more-toggle" data-action="more" aria-expanded="${s.more}">${s.more?'Less −':'More +'}</button>
+      </div>
+      ${s.more? `<div class="more-controls">
+        <button class="steer" data-action="around" ${disabled?'disabled':''}><span aria-hidden="true">⤾</span>Turn around</button>
+        ${past? `<button class="steer past-action" data-action="past" ${disabled?'disabled':''}>⇥ Go past ${safe(W.venues[passedPlace].article)}</button>`:
+          '<span class="chat-helper">Go past appears when a place is ahead of Cole.</span>'}
+      </div>`:''}`;
   }
   function canAct(){return isActive()&&!isPaused()&&!walker.busy;}
   function act(action){
     if(action==='controls'){s.controls=!s.controls;renderControls();return;}
-    if(action==='hideControls'){s.controls=false;renderControls();return;}
     if(action==='more'){s.more=!s.more;renderControls();return;}
     if(!canAct())return;
     if(action==='left'||action==='right'||action==='around'){walker.turn({left:-1,right:1,around:2}[action]);return;}
@@ -90,7 +106,23 @@
       const queue=s.mode==='missions'?allMissions().map((m,i)=>({m,i})).filter(o=>!s.completed.has(o.m.id)&&(o.m.target!==walker.location||s.accepted&&o.i===s.missionIndex)).slice(0,3):[{m:s.route,i:0}];
       const complete=allMissions().filter(m=>s.completed.has(m.id)).length;
       if(s.mode==='missions'&&!queue.length){area.innerHTML=inboxHead('A short walk first')+'<div class="inbox-art"><span class="envelope">♧</span><h3>You are already here.</h3><p>Take a short free walk, then check your messages for the remaining destination.</p></div><div class="chat-composer"><button class="phone-btn solid" data-phone="explore">Take a free walk →</button></div>';return;}
-      area.innerHTML=inboxHead(s.mode==='missions'?'A little adventure is one tap away':'A route from your friend')+`<div class="inbox-note">${s.mode==='missions'?'Mr Cole is visiting family in Australia.<br>Tap a message. Find a place. Help a friend.':'Alex has sent a route from where Cole is now.<br>Follow it and discover the meeting place.'}</div><div>${queue.map(({m,i},k)=>`<button class="thread" data-phone="open" data-index="${i}">${avatar(m)}<span class="thread-body"><b>${safe(m.sender)}</b><p>${safe(m.text)}</p><small>${safe(m.role||'Your message')}</small></span><span class="thread-meta">${k===0?'now':'soon'}<i class="unread"></i></span></button>`).join('')}</div><div class="inbox-art"><span class="envelope">✉</span><p>Your next little adventure<br>is waiting to be opened.</p></div>${s.mode==='missions'?`<div class="inbox-progress"><span>${complete} / ${allMissions().length} helped</span><span class="progress-bar"><i style="width:${complete/allMissions().length*100}%"></i></span></div>`:''}`;
+      const missions = s.mode === 'missions';
+      const note = missions
+        ? 'Mr Cole is visiting family in Australia.<br>Tap a message. Find a place. Help a friend.'
+        : 'Alex has sent a route from where Cole is now.<br>Follow it and discover the meeting place.';
+      const threads = queue.map(({m,i},k)=>`
+        <button class="thread" data-phone="open" data-index="${i}">
+          ${avatar(m)}
+          <span class="thread-body"><b>${safe(m.sender)}</b><p>${safe(m.text)}</p><small>${safe(m.role||'Your message')}</small></span>
+          <span class="thread-meta">${k===0?'now':'soon'}<i class="unread"></i></span>
+        </button>`).join('');
+      area.innerHTML = inboxHead(missions?'A little adventure is one tap away':'A route from your friend')+`
+        <div class="inbox-scroll">
+          <div class="inbox-note">${note}</div>
+          <div>${threads}</div>
+          ${missions?`<div class="inbox-progress"><span>${complete} / ${allMissions().length} helped</span><span class="progress-bar"><i style="width:${complete/allMissions().length*100}%"></i></span></div>`:''}
+          <div class="inbox-art"><span class="envelope">✉</span></div>
+        </div>`;
       return;
     }
     if(s.mode==='missions'){
@@ -208,7 +240,7 @@
   $('roadSigns').addEventListener('click',e=>{const b=e.target.closest('[data-rule-index]');if(b&&s.mode==='rules')selectRule(Number(b.dataset.ruleIndex));});
   $('spots').addEventListener('click',e=>{const b=e.target.closest('[data-place]');if(!b)return;if(s.mode==='rules'){toast('Tap one of the road signs.');return;}toast(s.mode==='free'?'That is '+W.venues[b.dataset.place].article+'. Tap the pavement in front of it to walk there.':'Help Cole walk to a place, then reply on the phone.');});
   $('map').addEventListener('click',e=>{
-    if(s.mode!=='free'||s.freeControl!=='click'||!canAct()||e.target.closest('.place-spot,.controls'))return;
+    if(s.mode!=='free'||s.freeControl!=='click'||!canAct()||e.target.closest('.place-spot'))return;
     const r=$('map').getBoundingClientRect(),id=nearestWalkPoint((e.clientX-r.left)/r.width*W.W,(e.clientY-r.top)/r.height*W.H);
     if(!id){toast('Tap the wide pavement near a place. Cole will use the crossings.');return;}if(id===walker.location)return;
     const path=W.shortestPath(walker.location,id);if(path){walker.walk(path);renderLocation();renderModes();}

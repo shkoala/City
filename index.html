@@ -7,7 +7,7 @@
   <meta name="description" content="City_tour: explore Mr Cole’s town. Read messages, follow English directions and find your way.">
   <title>City_tour · ШКОАЛА</title>
   <link rel="icon" href="assets/cole-south.png">
-  <link rel="stylesheet" href="style.css?v=20261115-bus-stop-turn">
+  <link rel="stylesheet" href="style.css?v=20261119-map-dock">
   <link rel="preload" as="image" href="assets/town-map-20261110.webp">
 </head>
 <body>
@@ -22,7 +22,7 @@
       </nav>
       <div class="header-tools"><span class="score" id="score">★ <b>0</b></span><button class="icon-btn" id="pause" aria-label="Pause game" title="Pause game">Ⅱ</button><button class="icon-btn" id="fullscreen" aria-label="Full screen" title="Full screen">⛶</button><button class="icon-btn" id="settings" aria-label="Teacher studio" title="Teacher studio">⚙</button></div>
     </header>
-    <main class="main">
+    <main class="play-frame"><div class="main">
       <section class="map-card" aria-label="Mr Cole’s interactive town">
         <div class="map-heading"><div class="map-title"><span class="eyebrow">A LITTLE ADVENTURE IN AUSTRALIA.</span><h1>City_tour</h1></div><div class="live-label"><i></i><span>Live town</span><span class="north">N ↑</span></div></div>
         <div class="map" id="map" tabindex="0" aria-label="Town map. Open a message to start. Arrow keys turn and walk Mr Cole.">
@@ -36,16 +36,27 @@
           <div id="roadSigns" class="road-sign-layer" aria-label="Road signs for speaking practice" hidden></div>
           <div id="cole" class="cole" style="left:49.724%;top:94.383%" data-facing="S" role="img" aria-label="Mr Cole"><div class="cole-shadow"></div><img id="coleSprite" src="assets/cole-south.png" alt="" draggable="false"><span class="cole-wait" id="coleWait">Wait for green</span></div>
           <div class="pause-cover" id="pauseCover" hidden><span>Ⅱ</span><b>A little pause.</b><button id="resume" class="btn primary">Continue exploring</button></div>
-          <div id="walkHint" class="walk-hint" hidden>Tap the pavement to walk</div>
-          <div id="controls" class="controls" hidden></div>
         </div>
-        <div class="map-bottom"><div class="location"><span class="mini-cole">🐨</span><div><b id="position">At the bus stop</b><small id="heading">Facing down ↓ · open your message to begin</small></div></div><div id="controlLauncher"></div></div>
+        <div class="map-bottom">
+          <div class="location"><span class="mini-cole">🐨</span><div><b id="position">At the bus stop</b><small id="heading">Facing down ↓ · open your message to begin</small></div></div>
+          <div id="controlLauncher"></div>
+          <div id="controls" class="controls" role="group" aria-label="Walking controls. Left and right are Mr Cole’s." hidden></div>
+        </div>
       </section>
       <aside class="phone-column" aria-label="Phone and mission">
-        <div class="phone" id="phone"><div class="phone-glass"><div class="phone-top"><span id="clock">09:41</span><span class="island"></span><span class="phone-icons">▴ ◒ ▰</span></div><div class="phone-area" id="phoneArea"></div><div class="phone-home"></div></div></div>
-        <div class="mode-caption"><span id="modeNumber">01 / MISSIONS</span><p id="modeDescription">A message. A little mystery.<br>Find the place and help a friend.</p></div>
+        <div class="phone" id="phone">
+          <div class="phone-glass">
+            <div class="phone-top">
+              <span id="clock">09:41</span><span class="island" aria-hidden="true"></span>
+              <span class="phone-icons" aria-hidden="true"><i class="phone-signal"></i><i class="phone-wifi"></i><i class="phone-battery"></i></span>
+            </div>
+            <div class="phone-area" id="phoneArea"></div>
+            <div class="phone-home" aria-hidden="true"></div>
+          </div>
+        </div>
+        <p class="mode-caption" id="modeDescription">Find the place and help a friend.</p>
       </aside>
-    </main>
+    </div></main>
     <footer class="footer"><a class="vk-link" href="https://vk.ru/abc_shkoala" target="_blank" rel="noopener noreferrer">VK · ШКОАЛА ↗</a><div class="footer-actions"><button id="help">How to play <span>↗</span></button><a class="more-games" href="https://vk.ru/abc_shkoala?w=donut_payment-190039625&amp;levelId=3559" target="_blank" rel="noopener noreferrer">More games <span>↗</span></a></div></footer>
   </div>
   <dialog id="studio" class="studio"><div class="dialog-title"><div><span class="eyebrow">MAKE IT YOUR LESSON</span><h2>Teacher studio</h2></div><button class="icon-btn close-dialog" aria-label="Close teacher studio">×</button></div>
@@ -74,7 +85,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div class="sr-only" id="announcer" aria-live="polite"></div>
   <script src="world.js?v=20261115-bus-stop-turn"></script><script src="road-rules.js?v=20261115-bus-stop-turn"></script><script src="traffic.js?v=20261115-bus-stop-turn"></script><script src="walker.js?v=20261115-bus-stop-turn"></script><script src="scene-geometry.js?v=20261115-bus-stop-turn"></script><script src="cycling.js?v=20261115-bus-stop-turn"></script><script src="scene.js?v=20261115-bus-stop-turn"></script>
-<script src="draw.js?v=20261115-bus-stop-turn"></script><script src="app.js?v=20261115-bus-stop-turn"></script>
+<script src="draw.js?v=20261115-bus-stop-turn"></script><script src="app.js?v=20261119-map-dock"></script>
 </body>
 </html>
 
