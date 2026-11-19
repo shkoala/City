@@ -21,6 +21,7 @@
   const score=()=>s.completed.size+s.routesCompleted;
   const isActive=()=>s.mode==='free'||(s.chat&&s.accepted&&(s.mode!=='directions'||!s.routeSolved));
   const isPaused=()=>s.paused||document.hidden||$('studio').open||$('welcome').open;
+  const steeringButtons = $('controls').querySelectorAll('.steer');
   const modeCaptions = {
     missions: 'Find the place and help a friend.',
     directions: 'Where is your friend waiting?',
@@ -39,7 +40,7 @@
       if(W.nodes[value].place){$('announcer').textContent='Mr Cole is outside '+W.venues[W.nodes[value].place].article+'.';}
     }
     if(type==='stop'){
-      s.controls=false;s.more=false;renderControls();renderLocation();
+      renderControls();renderLocation();
       if(s.mode==='missions'&&s.accepted&&W.nodes[value].place){toast('Send “I’m here!” on the phone when you think you have arrived.');}
       if(s.mode==='directions'&&s.chat){renderPhone();}
       if(s.mode==='free'&&W.nodes[value].place)toast('Mr Cole is outside '+W.venues[value].article+'.');
@@ -60,29 +61,40 @@
     $('map').setAttribute('aria-label','Town map. '+(s.mode==='rules'?'Select a road sign and say a rule.':isActive()?'Arrow keys turn and walk Mr Cole.':'Open a phone message to begin.'));
   }
   function renderControls(){
-    const launch=$('controlLauncher'),active=isActive(),click=s.mode==='free'&&s.freeControl==='click';
-    if(!active||click){s.controls=false;launch.innerHTML=s.mode==='rules'?'<span class="chat-helper">Tap a road sign ↗</span>':click?'<span class="chat-helper">Click to walk is on</span>':'<span class="chat-helper">Your adventure starts on the phone ↗</span>';}
-    else launch.innerHTML=`<button class="btn launch" data-action="controls" aria-label="${s.controls?'Hide walking controls':'Walk controls'}" aria-expanded="${s.controls}" aria-controls="controls">${s.controls?'Hide':'Walk controls'} <small aria-hidden="true">↑ ← →</small><span aria-hidden="true">${s.controls?'▴':'▾'}</span></button>`;
-    const el=$('controls');el.hidden=!s.controls||!active||click;
-    const next=W.neighbour(walker.location,walker.facing),past=W.pastPath(walker.location,walker.facing),passedPlace=W.pastLandmark(walker.location,walker.facing),cross=next&&W.edge(walker.location,next).crossing;
-    const disabled=walker.busy||isPaused();
-    const forward = cross ? 'Cross the road' : 'Go straight on';
-    el.innerHTML = `
-      <div class="control-row">
-        <button class="steer" data-action="left" ${disabled?'disabled':''} title="Turn left (←)"><span aria-hidden="true">↶</span>Turn left</button>
-        <button class="steer forward" data-action="forward" ${disabled||!next?'disabled':''} title="${forward} (↑)"><span aria-hidden="true">↑</span>${forward}</button>
-        <button class="steer" data-action="right" ${disabled?'disabled':''} title="Turn right (→)"><span aria-hidden="true">↷</span>Turn right</button>
-        <button class="more-toggle" data-action="more" aria-expanded="${s.more}">${s.more?'Less −':'More +'}</button>
-      </div>
-      ${s.more? `<div class="more-controls">
-        <button class="steer" data-action="around" ${disabled?'disabled':''}><span aria-hidden="true">⤾</span>Turn around</button>
-        ${past? `<button class="steer past-action" data-action="past" ${disabled?'disabled':''}>⇥ Go past ${safe(W.venues[passedPlace].article)}</button>`:
-          '<span class="chat-helper">Go past appears when a place is ahead of Cole.</span>'}
-      </div>`:''}`;
+    const clickToWalk = s.mode === 'free' && s.freeControl === 'click';
+    const available = isActive() && !clickToWalk;
+    const expanded = available && s.controls;
+    const launcher = $('controlLauncher');
+    const hint = $('controlHint');
+    launcher.hidden = !available;
+    launcher.setAttribute('aria-expanded', String(expanded));
+    hint.hidden = available;
+    $('controls').hidden = !expanded;
+    if (!available) {
+      hint.textContent = s.mode === 'rules' ? 'Tap a road sign ↗'
+        : clickToWalk ? 'Click to walk is on' : 'Your adventure starts on the phone ↗';
+    }
+    if (!expanded) return;
+
+    const next = W.neighbour(walker.location, walker.facing);
+    const forward = next && W.edge(walker.location, next).crossing ? 'Cross the road' : 'Go straight on';
+    const disabled = walker.busy || isPaused();
+    steeringButtons.forEach(button => { button.disabled = disabled; });
+    $('forwardControl').disabled = disabled || !next;
+    $('forwardControl').title = forward + ' (↑)';
+    $('forwardLabel').textContent = forward;
+    $('moreToggle').setAttribute('aria-expanded', String(s.more));
+    $('moreToggle').textContent = s.more ? 'Less −' : 'More +';
+    $('moreControls').hidden = !s.more;
+    if (!s.more) return;
+
+    const landmark = W.pastLandmark(walker.location, walker.facing);
+    $('pastControl').hidden = !landmark;
+    $('pastHint').hidden = Boolean(landmark);
+    if (landmark) $('pastLabel').textContent = 'Go past ' + W.venues[landmark].article;
   }
   function canAct(){return isActive()&&!isPaused()&&!walker.busy;}
   function act(action){
-    if(action==='controls'){s.controls=!s.controls;renderControls();return;}
     if(action==='more'){s.more=!s.more;renderControls();return;}
     if(!canAct())return;
     if(action==='left'||action==='right'||action==='around'){walker.turn({left:-1,right:1,around:2}[action]);return;}
@@ -90,7 +102,7 @@
     if(action==='past')path=W.pastPath(walker.location,walker.facing);
     else if(action==='forward'){const n=W.neighbour(walker.location,walker.facing);if(n)path=[walker.location,n];}
     if(!path){toast('No pavement ahead. Turn Mr Cole at the junction.');return;}
-    s.controls=false;s.more=false;walker.walk(path);renderControls();renderModes();renderLocation();
+    walker.walk(path);renderControls();renderModes();renderLocation();
   }
   function avatar(m){return `<span class="avatar ${m.sender==='Alex'?'alex':''}">${m.emoji||'💬'}</span>`;}
   function inboxHead(sub){return `<div class="phone-head"><div><h2>Messages</h2><small>${sub}</small></div><span>♧</span></div>`;}
@@ -151,7 +163,7 @@
   function newRoute(){s.route=W.routeTask(walker.location,walker.facing,s.routeSerial);s.routeTrail=[walker.location];s.routeSolved=false;s.accepted=false;s.chat=false;s.answer='';s.feedback='';}
   function switchMode(mode){
     if(walker.busy){toast('Let Mr Cole finish this short walk first.');return;}
-    s.mode=mode;s.chat=false;s.accepted=false;s.controls=false;s.more=false;s.feedback='';window.speechSynthesis?.cancel();
+    s.mode=mode;s.chat=false;s.accepted=false;s.feedback='';window.speechSynthesis?.cancel();
     if(mode==='directions')newRoute();if(mode==='missions')selectMission();if(mode==='rules')s.ruleRevealed=false;renderModes();renderPhone();renderControls();renderLocation();
   }
   function say(text){
@@ -164,21 +176,21 @@
     if(action==='speakRule'&&s.mode==='rules'){if(s.ruleRevealed)say(R.signs[s.ruleIndex].answers[0]);return;}
     if(action==='speak'){const t=s.mode==='missions'?current():s.route;say(t.text+(s.mode==='directions'?' '+t.instructions.map(i=>i.text).join(' '):''));return;}
     if(action==='explore'){switchMode('free');return;}
-    if(action==='back'){s.chat=false;s.controls=false;renderPhone();renderControls();return;}
+    if(action==='back'){s.chat=false;renderPhone();renderControls();renderLocation();return;}
     if(action==='open'){
       const i=Number(el.dataset.index);if(s.mode==='missions'&&i!==s.missionIndex){if(walker.busy)return;s.missionIndex=i;s.accepted=false;s.feedback='';}
-      s.chat=true;renderPhone();if(s.settings.speech){const t=s.mode==='missions'?current():s.route;say(t.text+(s.mode==='directions'?' '+t.instructions.map(i=>i.text).join(' '):''));}return;
+      s.chat=true;renderPhone();renderControls();renderLocation();if(s.settings.speech){const t=s.mode==='missions'?current():s.route;say(t.text+(s.mode==='directions'?' '+t.instructions.map(i=>i.text).join(' '):''));}return;
     }
     if(action==='accept'){s.accepted=true;s.feedback='';if(s.mode==='directions')s.routeTrail=[walker.location];renderPhone();renderControls();renderLocation();toast('Left and right are Mr Cole’s. Turn first, then walk.');return;}
     if(action==='arrived'){
       if(walker.busy){toast('Let Mr Cole finish walking first.');return;}
       if(walker.location!==current().target){s.feedback='This doesn’t seem to be the right place. Read the message again and keep looking.';renderPhone();return;}
-      if(!missionDone()){s.completed.add(current().id);s.accepted=false;s.controls=false;s.feedback='';persist();pulse(walker.location);renderModes();renderPhone();renderControls();renderLocation();toast('Mission complete! You helped '+current().sender+'.');}return;
+      if(!missionDone()){s.completed.add(current().id);s.accepted=false;s.feedback='';persist();pulse(walker.location);renderModes();renderPhone();renderControls();renderLocation();toast('Mission complete! You helped '+current().sender+'.');}return;
     }
-    if(action==='nextMission'){selectMission();s.chat=false;s.accepted=false;s.controls=false;s.feedback='';renderPhone();renderControls();return;}
+    if(action==='nextMission'){selectMission();s.chat=false;s.accepted=false;s.feedback='';renderPhone();renderControls();return;}
     if(action==='newRoute'){if(walker.busy)return;persist();newRoute();s.chat=true;renderPhone();renderControls();renderLocation();return;}
-    if(action==='restartRoute'){if(walker.busy)return;walker.reset(s.route.start,s.route.facing);s.routeTrail=[s.route.start];s.feedback='';s.answer='';s.accepted=true;s.controls=false;renderPhone();renderControls();renderLocation();return;}
-    if(action==='freeArrows'||action==='freeClick'){if(walker.busy)return;s.freeControl=action==='freeClick'?'click':'arrows';s.controls=false;renderFree();renderModes();renderControls();renderLocation();return;}
+    if(action==='restartRoute'){if(walker.busy)return;walker.reset(s.route.start,s.route.facing);s.routeTrail=[s.route.start];s.feedback='';s.answer='';s.accepted=true;renderPhone();renderControls();renderLocation();return;}
+    if(action==='freeArrows'||action==='freeClick'){if(walker.busy)return;s.freeControl=action==='freeClick'?'click':'arrows';renderFree();renderModes();renderControls();renderLocation();return;}
     if(action==='phrase'){phrase++;renderFree();return;}
     if(action==='restartLesson')resetLesson();
   }
@@ -189,11 +201,11 @@
     else if(walker.location!==s.route.target){s.feedback='That place sounds right. Now walk Mr Cole there.';}
     else if(routeOff()||s.routeTrail.length!==s.route.path.length){s.feedback='You found the place! Now follow Alex’s complete route. Retrace your steps or restart.';}
     else if(walker.facing!==W.direction(s.route.path.at(-2),s.route.target)){s.feedback='Face the direction you were walking when you reached the entrance. Then send your answer.';}
-    else if(!s.routeSolved){s.routeSolved=true;const award=(s.route.planned?'story-':s.route.connector?'link-':'extra-')+s.route.serial+'-'+s.route.start+'-'+s.route.target;if(!s.routeAwards.has(award)){s.routeAwards.add(award);s.routesCompleted++;}if(!s.route.connector)s.routeSerial=s.route.serial+1;s.accepted=false;s.controls=false;s.feedback='You followed the route and found '+W.venues[s.route.target].article+'.';persist();pulse(walker.location);renderModes();toast('Perfect! The route and the meeting place are correct.');}
+    else if(!s.routeSolved){s.routeSolved=true;const award=(s.route.planned?'story-':s.route.connector?'link-':'extra-')+s.route.serial+'-'+s.route.start+'-'+s.route.target;if(!s.routeAwards.has(award)){s.routeAwards.add(award);s.routesCompleted++;}if(!s.route.connector)s.routeSerial=s.route.serial+1;s.accepted=false;s.feedback='You followed the route and found '+W.venues[s.route.target].article+'.';persist();pulse(walker.location);renderModes();toast('Perfect! The route and the meeting place are correct.');}
     renderPhone();renderControls();renderLocation();
   }
   function resetLesson(){
-    s.ruleIndex=0;s.ruleRevealed=false;s.completed.clear();s.routeAwards.clear();s.routesCompleted=0;s.routeSerial=0;s.missionIndex=0;s.chat=false;s.accepted=false;s.controls=false;s.feedback='';walker.reset('bus','S');if(s.mode==='directions')newRoute();persist();renderAll();toast('A fresh lesson. Mr Cole is back at the bus stop.');
+    s.ruleIndex=0;s.ruleRevealed=false;s.completed.clear();s.routeAwards.clear();s.routesCompleted=0;s.routeSerial=0;s.missionIndex=0;s.chat=false;s.accepted=false;s.feedback='';walker.reset('bus','S');if(s.mode==='directions')newRoute();persist();renderAll();toast('A fresh lesson. Mr Cole is back at the bus stop.');
   }
   function renderAll(){renderModes();renderPhone();renderControls();renderLocation();}
   function setPaused(value){s.paused=value;$('pauseCover').hidden=!value;$('pause').textContent=value?'▷':'Ⅱ';$('pause').setAttribute('aria-label',value?'Resume game':'Pause game');renderControls();window.speechSynthesis?.cancel();}
@@ -208,7 +220,7 @@
   function customList(){
     $('customList').innerHTML=s.custom.length?s.custom.map((m,i)=>`<div class="custom-message"><button data-delete="${i}" aria-label="Delete message from ${safe(m.sender)}">×</button><b>${safe(m.sender)} → ${safe(W.venues[m.target].name)}</b><p>${safe(m.text)}</p></div>`).join(''):'<p class="storage-note">Your own messages will appear here and in Missions.</p>';
   }
-  function openStudio(){customList();$('studio').showModal();document.body.classList.add('dialog-open');s.controls=false;renderControls();window.speechSynthesis?.cancel();}
+  function openStudio(){customList();$('studio').showModal();document.body.classList.add('dialog-open');renderControls();window.speechSynthesis?.cancel();}
   function saveDownload(name,body){const url=URL.createObjectURL(new Blob([body],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function nearestWalkPoint(x,y){
     let candidate=null,best=Infinity;
@@ -233,7 +245,10 @@
   $('destination').innerHTML=W.places.map(p=>`<option value="${p.id}">${safe(p.name)}</option>`).join('');
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>switchMode(b.dataset.mode)));
   $('controls').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)act(b.dataset.action);});
-  $('controlLauncher').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)act(b.dataset.action);});
+  $('controlLauncher').addEventListener('click',()=>{
+    s.controls = !s.controls;
+    renderControls();
+  });
   $('phoneArea').addEventListener('click',e=>{const b=e.target.closest('[data-phone]');if(b)phoneAction(b.dataset.phone,b);});
   $('phoneArea').addEventListener('submit',e=>{if(e.target.id==='answerForm'){e.preventDefault();checkAnswer();}});
   $('phoneArea').addEventListener('input',e=>{if(e.target.id==='answer')s.answer=e.target.value;});
@@ -246,12 +261,10 @@
     const path=W.shortestPath(walker.location,id);if(path){walker.walk(path);renderLocation();renderModes();}
   });
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){s.controls=false;renderControls();return;}
     if(e.target.closest('input,textarea,select,[contenteditable="true"],dialog'))return;
     const action={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'forward',ArrowDown:'around'}[e.key];
     if(!action||!isActive()||s.mode==='free'&&s.freeControl==='click'||isPaused())return;e.preventDefault();if(!e.repeat)act(action);
   });
-  document.addEventListener('pointerdown',e=>{if(s.controls&&!e.target.closest('#controls,#controlLauncher')){s.controls=false;renderControls();}});
   $('settings').addEventListener('click',openStudio);$('pause').addEventListener('click',()=>setPaused(!s.paused));$('resume').addEventListener('click',()=>setPaused(false));
   $('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if($('app').requestFullscreen)await $('app').requestFullscreen();else toast('Use your browser’s full-screen option.');}catch{toast('Use your browser’s full-screen option.');}});
   $('help').addEventListener('click',()=>$('welcome').showModal());$('welcomeGo').addEventListener('click',()=>$('welcome').close());
@@ -259,10 +272,10 @@
   document.querySelectorAll('dialog').forEach(d=>d.addEventListener('close',()=>{document.body.classList.remove('dialog-open');renderControls();}));
   document.querySelectorAll('[data-studio]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-studio]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-page]').forEach(p=>p.hidden=p.dataset.page!==b.dataset.studio);}));
   [['showNames','names'],['showPaths','paths'],['speech','speech'],['trafficToggle','traffic']].forEach(([id,key])=>$(id).addEventListener('change',()=>{if(key==='traffic'&&walker.busy){$(id).checked=s.settings.traffic;toast('Let Cole finish crossing before changing traffic.');return;}s.settings[key]=$(id).checked;applySettings();}));
-  $('resetBus').addEventListener('click',()=>{walker.reset('bus','S');s.controls=false;s.feedback='';if(s.mode==='directions')newRoute();renderAll();$('studio').close();toast('Mr Cole is at the bus stop.');});
+  $('resetBus').addEventListener('click',()=>{walker.reset('bus','S');s.feedback='';if(s.mode==='directions')newRoute();renderAll();$('studio').close();toast('Mr Cole is at the bus stop.');});
   $('resetLesson').addEventListener('click',()=>{resetLesson();$('studio').close();});
   $('missionForm').addEventListener('submit',e=>{e.preventDefault();const m={sender:$('sender').value.trim(),text:$('message').value.trim(),target:$('destination').value,id:'custom-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),emoji:'💬'};if(!validMessage(m)){toast('Add a sender, a message and a valid destination.');return;}if(s.custom.length>=100){toast('You can keep up to 100 custom messages. Export or remove some first.');return;}s.custom.push(m);$('message').value='';persist();customList();renderPhone();toast('Message added to Missions.');});
-  $('customList').addEventListener('click',e=>{const b=e.target.closest('[data-delete]');if(!b)return;const m=s.custom.splice(Number(b.dataset.delete),1)[0];s.completed.delete(m.id);selectMission();s.accepted=false;s.chat=false;s.controls=false;s.feedback='';persist();customList();renderAll();});
+  $('customList').addEventListener('click',e=>{const b=e.target.closest('[data-delete]');if(!b)return;const m=s.custom.splice(Number(b.dataset.delete),1)[0];s.completed.delete(m.id);selectMission();s.accepted=false;s.chat=false;s.feedback='';persist();customList();renderAll();});
   $('export').addEventListener('click',()=>saveDownload('City_tour_missions.json',JSON.stringify({format:'city-messages',version:2,messages:s.custom.map(({sender,text,target})=>({sender,text,target}))},null,2)));
   $('import').addEventListener('click',()=>$('importFile').click());
   $('importFile').addEventListener('change',async e=>{

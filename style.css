@@ -84,28 +84,29 @@
 
 /* The map and its controls share a card, with their own space in the layout. */
 .app {
-  max-width: 1460px;
+  max-width: 1760px;
   margin: auto;
-  padding: 14px clamp(12px, 2vw, 30px) 6px;
+  padding: 10px clamp(12px, 2vw, 32px) 6px;
 }
 
-.app .header { margin-bottom: 14px; }
-.app .footer { padding-block: 7px; }
-.footer .more-games { padding-block: 7px; }
+.app .header { margin-bottom: 10px; }
+.app .footer { padding-block: 5px; }
+.footer .more-games { padding-block: 6px; }
 
 .main {
+  --play-gap: clamp(14px, 2.4vw, 36px);
   --phone-width: clamp(244px, 22vw, 318px);
   display: grid;
   grid-template-columns: minmax(0, 1040px) var(--phone-width);
   justify-content: center;
   align-items: start;
-  gap: clamp(14px, 2.1vw, 30px);
+  gap: var(--play-gap);
 }
 
 .map-card {
   container: city-map / inline-size;
   min-width: 0;
-  padding: 10px 11px 0;
+  padding: 8px 11px 0;
   border: 1px solid #d9e3d4;
   border-radius: 20px;
   background: #fffdf6;
@@ -117,7 +118,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 0 2px 8px;
+  padding: 0 2px 6px;
 }
 
 .map-title {
@@ -157,7 +158,7 @@
 
 .mini-cole { flex-shrink: 0; }
 
-#controlLauncher { text-align: end; }
+.control-launcher { text-align: end; }
 
 .launch {
   min-height: 34px;
@@ -170,13 +171,7 @@
 }
 
 .launch:hover, .launch[aria-expanded='true'] { background: #e1ecd9; }
-
-.launch small {
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: #dce8d5;
-  font-size: 10px;
-}
+.launch[aria-expanded='true'] .launch-chevron { transform: rotate(180deg); }
 
 .controls {
   grid-column: 1 / -1;
@@ -209,7 +204,7 @@
   line-height: 1.2;
 }
 
-.steer span { font-size: 18px; line-height: 1; }
+.steer-icon { font-size: 18px; line-height: 1; }
 .steer:hover:not(:disabled), .more-toggle:hover { background: #e3ecdf; }
 
 .steer.forward {
@@ -477,20 +472,39 @@
       grid-template-rows: auto minmax(0, 1fr) auto;
     }
 
-    .play-frame { container-type: size; }
+    .play-frame { container: city-play / size; }
 
     .main {
-      --play-height: min(100cqh, 954px);
-      --map-interface-height: 178px;
+      --play-height: 100cqh;
+      --map-interface-height: 174px;
+      --map-card-width: calc((var(--play-height) - var(--map-interface-height)) * 4 / 3 + 24px);
+      --layout-width: calc(var(--map-card-width) + var(--phone-width) + var(--play-gap));
       --phone-screen-height: clamp(244px, calc(var(--play-height) - 146px), 550px);
       --phone-drop: clamp(36px, calc((var(--play-height) - var(--phone-screen-height)) / 2 + 12px), 168px);
-      grid-template-columns: minmax(0, calc((var(--play-height) - var(--map-interface-height)) * 4 / 3 + 24px)) var(--phone-width);
+      width: min(100%, var(--layout-width));
+      margin-inline-start: max(0px, calc((100% - var(--layout-width)) / 4));
+      grid-template-columns: minmax(0, 1fr) var(--phone-width);
     }
   }
 }
 
-@media (max-width: 1150px) {
-  .launch small { display: none; }
+@container city-play (min-width: 1000px) and (min-height: 605px) {
+  .main { --map-interface-height: 136px; }
+
+  .map-bottom {
+    grid-template-columns: minmax(145px, 1fr) minmax(0, 470px) auto;
+    align-items: start;
+  }
+
+  .map-bottom .location { grid-area: 1 / 1; }
+  .control-launcher { grid-area: 1 / 3; }
+  .map-bottom .location, .control-launcher { min-height: 40px; }
+  .control-launcher { display: grid; justify-items: end; align-items: center; }
+  .controls { grid-area: 1 / 2; }
+}
+
+@container city-play (max-height: 400px) {
+  .main { --map-interface-height: 188px; }
 }
 
 @media (max-width: 920px) {
@@ -507,7 +521,7 @@
     padding: 3px 2px;
     font-size: 10px;
   }
-  .steer span { font-size: 15px; }
+  .steer-icon { font-size: 15px; }
   .more-toggle { padding-inline: 5px; }
 }
 
@@ -528,7 +542,7 @@
   .map-bottom .chat-helper { max-width: 110px; }
   .map-bottom .more-controls .chat-helper { max-width: 175px; }
   .steer, .more-toggle { padding-inline: 5px; font-size: 11px; }
-  .steer span { font-size: 15px; }
+  .steer-icon { font-size: 15px; }
   .phone-column { width: min(92%, 340px); }
   .mode-caption { display: none; }
 }

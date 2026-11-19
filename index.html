@@ -7,7 +7,7 @@
   <meta name="description" content="City_tour: explore Mr Cole’s town. Read messages, follow English directions and find your way.">
   <title>City_tour · ШКОАЛА</title>
   <link rel="icon" href="assets/cole-south.png">
-  <link rel="stylesheet" href="style.css?v=20261119-map-dock">
+  <link rel="stylesheet" href="style.css?v=20261119-roomier-map">
   <link rel="preload" as="image" href="assets/town-map-20261110.webp">
 </head>
 <body>
@@ -39,8 +39,25 @@
         </div>
         <div class="map-bottom">
           <div class="location"><span class="mini-cole">🐨</span><div><b id="position">At the bus stop</b><small id="heading">Facing down ↓ · open your message to begin</small></div></div>
-          <div id="controlLauncher"></div>
-          <div id="controls" class="controls" role="group" aria-label="Walking controls. Left and right are Mr Cole’s." hidden></div>
+          <div class="control-launcher">
+            <button id="controlLauncher" class="btn launch" type="button" aria-expanded="false" aria-controls="controls" hidden>
+              Walk controls <span class="launch-chevron" aria-hidden="true">▾</span>
+            </button>
+            <span id="controlHint" class="chat-helper">Your adventure starts on the phone ↗</span>
+          </div>
+          <div id="controls" class="controls" role="group" aria-label="Walking controls. Left and right are Mr Cole’s." hidden>
+            <div class="control-row">
+              <button class="steer" type="button" data-action="left" title="Turn left (←)"><span class="steer-icon" aria-hidden="true">↶</span>Turn left</button>
+              <button id="forwardControl" class="steer forward" type="button" data-action="forward" title="Go straight on (↑)"><span class="steer-icon" aria-hidden="true">↑</span><span id="forwardLabel">Go straight on</span></button>
+              <button class="steer" type="button" data-action="right" title="Turn right (→)"><span class="steer-icon" aria-hidden="true">↷</span>Turn right</button>
+              <button id="moreToggle" class="more-toggle" type="button" data-action="more" aria-expanded="false" aria-controls="moreControls">More +</button>
+            </div>
+            <div id="moreControls" class="more-controls" hidden>
+              <button class="steer" type="button" data-action="around"><span class="steer-icon" aria-hidden="true">⤾</span>Turn around</button>
+              <button id="pastControl" class="steer past-action" type="button" data-action="past" hidden><span aria-hidden="true">⇥</span><span id="pastLabel"></span></button>
+              <span id="pastHint" class="chat-helper">Go past appears when a place is ahead of Cole.</span>
+            </div>
+          </div>
         </div>
       </section>
       <aside class="phone-column" aria-label="Phone and mission">
@@ -77,7 +94,7 @@
       <h3>A visit to Australia</h3><p>Mr Cole is a teacher in Russia. He is visiting his family in Australia. Help him find his way, meet friends and send a postcard to Russia.</p>
       <h3>Four ways to play</h3><p><b>Missions.</b> Open a message and tap <i>On my way!</i>. Work out the destination. Walk to the entrance and reply <i>I’m here!</i>. Some messages are errands; others use behind, in front of, next to, opposite and between.</p><p><b>Follow directions.</b> Alex sends two connected story walks. Follow the route, then write the meeting place. The game checks both the route and the answer. Each new task starts where Cole finished the previous one. If you take a wrong turn, retrace your steps or choose <i>Restart route</i>.</p><p><b>Free walk.</b> Use arrow controls or <i>Click to walk</i>. In click mode, tap the pavement near an entrance; Cole follows a safe path. Give your partner spoken directions.</p>
       <p><b>Road rules.</b> Tap a sign on the map. Imagine you are the driver or pedestrian shown on the phone. Say a rule with <i>can, can’t, must</i> or <i>mustn’t</i>, then open <i>Show examples</i>. Signs appear in this mode; Mr Cole keeps his walking position.</p>
-      <h3>Turn first, then walk</h3><p><b>↑</b> go straight on. <b>← / →</b> turn left / right relative to Cole. <b>↓</b> turn around. The arrow in the location bar shows his view. At the beginning Cole stands in front of the bus stop, facing down, away from the shelter.</p><p><i>Walk controls</i> opens the buttons. They fold away when he walks. <i>More</i> shows <b>Go past…</b> when a landmark can be passed. <b>Esc</b> folds the controls away. One forward action takes him to the next entrance, crossing approach or pavement junction. Continue straight through a junction when the message says to do so.</p>
+      <h3>Turn first, then walk</h3><p><b>↑</b> go straight on. <b>← / →</b> turn left / right relative to Cole. <b>↓</b> turn around. The arrow in the location bar shows his view. At the beginning Cole stands in front of the bus stop, facing down, away from the shelter.</p><p>Tap <i>Walk controls</i> to open the buttons and tap it again to close them. <i>More</i> shows <b>Go past…</b> when a landmark can be passed. One forward action takes him to the next entrance, crossing approach or pavement junction. Continue straight through a junction when the message says to do so.</p>
       <h3>Roads and crossings</h3><p>Cole stays on the pavement and uses the marked zebras. He waits on the pavement for the pedestrian green. Cars slow down for amber and stop for red; a car already beyond its stop line clears the crossing first. The lights stay red until Cole has finished crossing. The garage, police station and post office are joined: reach the courtyard by walking around the whole row.</p><p>Use <i>Moving traffic</i> to run a quieter lesson. The pause button, hidden browser tab and open settings stop the simulation. Progress, settings and custom messages stay on this device. Export your messages to move them to another device.</p>
     </div>
   </dialog>
@@ -85,7 +102,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div class="sr-only" id="announcer" aria-live="polite"></div>
   <script src="world.js?v=20261115-bus-stop-turn"></script><script src="road-rules.js?v=20261115-bus-stop-turn"></script><script src="traffic.js?v=20261115-bus-stop-turn"></script><script src="walker.js?v=20261115-bus-stop-turn"></script><script src="scene-geometry.js?v=20261115-bus-stop-turn"></script><script src="cycling.js?v=20261115-bus-stop-turn"></script><script src="scene.js?v=20261115-bus-stop-turn"></script>
-<script src="draw.js?v=20261115-bus-stop-turn"></script><script src="app.js?v=20261119-map-dock"></script>
+<script src="draw.js?v=20261115-bus-stop-turn"></script><script src="app.js?v=20261119-roomier-map"></script>
 </body>
 </html>
 
